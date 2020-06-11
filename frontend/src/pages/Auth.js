@@ -1,12 +1,14 @@
-import React, {useState} from 'react';
+import React, {useState, useContext} from 'react';
 import './Auth.css';
+import AuthContext from '../context/auth-context';
 
 
 const AuthPage = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isLogin, setIsLogin] = useState(true);
-
+    const {login, logout} = useContext(AuthContext);
+    
     const submitHanlder = (e) => {
         e.preventDefault();
         if(email.trim().length === 0 || password.trim().length === 0) return;
@@ -46,8 +48,6 @@ const AuthPage = () => {
             credentials: 'include'
         })
         .then(res => {
-            console.log(res);
-            
             if(res.status !== 200 && res.status !== 201) {
                 throw new Error('Failed');
             }
@@ -55,6 +55,10 @@ const AuthPage = () => {
         })
         .then(resData => {
             console.log(resData);
+            
+            if(resData.data.login.token) {
+                login(resData.data.login.token, resData.data.login.userId, resData.data.login.tokenExpiration);
+            }
         })
         .catch(err => {
             console.log(err);
