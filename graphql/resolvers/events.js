@@ -8,6 +8,7 @@ module.exports = {
         try {
             const events = await Event.find()
             return events.map(event => {
+                
                 return transformEvent(event);
             })
         }

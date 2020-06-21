@@ -5,6 +5,7 @@ import Backdrop from '../components/Backdrop/Backdrop';
 import AuthContext from '../context/auth-context';
 import EventList from '../components/Events/EventList';
 import Spinner from '../components/Spinner/Spinner';
+import { set } from 'mongoose';
 
 const EventsPage = () => {
     const [creating, setCreating] = useState(false);
@@ -15,10 +16,14 @@ const EventsPage = () => {
     const {token, userId} = useContext(AuthContext);
     const [events, setEvents] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const [selectedEvent, setSelectedEvent] = useState(null)
+    const [selectedEvent, setSelectedEvent] = useState(null);
+    let isActive = true;
 
     useEffect(() => {
         fetchEvents()
+        return () => {
+            isActive= false;
+        }
     }, []);
     
     const fetchEvents = () => {
@@ -56,12 +61,18 @@ const EventsPage = () => {
             return res.json();
         })
         .then(resData => {
-            setEvents(resData.data.events);
-            setIsLoading(false);
+            if(isActive) {
+                console.log(resData);
+                
+                setEvents(resData.data.events);
+                setIsLoading(false);
+            }
         })
         .catch(err => {
             console.log(err);
-            setIsLoading(false);
+            if(isActive) {
+                setIsLoading(false);
+            }
         });
 
     }
@@ -76,8 +87,8 @@ const EventsPage = () => {
         console.log(event);
         const reqBody = {
             query:`
-                mutation {
-                    createEvent(eventInput: {title:"${title}", description: "${description}", price: ${price}, date: "${date}"}){
+                mutation CreateEvent($title: String!, $description: String!, $price: Float!, $date: String!){
+                    createEvent(eventInput: {title: $title, description: $description, price: $price, date: $date}){
                         _id
                         title
                         description
@@ -85,7 +96,13 @@ const EventsPage = () => {
                         price
                     }
                 }
-            `
+            `,
+            variables: {
+                title,
+                description,
+                price,
+                date
+            }
         };
     
         
@@ -134,8 +151,51 @@ const EventsPage = () => {
         setSelectedEvent(event)
     }
 
-    const bookEvent = (eventId) => {
-
+    const bookEvent = () => {
+        if(!token) {
+            setSelectedEvent(null);
+            return;
+        }
+        const reqBody = {
+            query:`
+                mutation BookEvent($eventId: ID!){
+                    bookEvent(eventId: $eventId){
+                        _id
+                        createdAt
+                        updatedAt
+                        user{
+                            email
+                        }
+                    }
+                }
+            `,
+            variables: {
+                eventId: selectedEvent._id
+            }
+        };
+    
+        fetch('http://localhost:8000/graphql', {
+            method: 'POST',
+            body: JSON.stringify(reqBody),
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+            },
+            credentials: 'include'
+        })
+        .then(res => {
+            if(res.status !== 200 && res.status !== 201) {
+                throw new Error('Failed');
+            }
+            return res.json();
+        })
+        .then(resData => {
+            console.log(resData);
+            setSelectedEvent(null);
+        })
+        .catch(err => {
+            console.log(err);
+        });
     }
 
     return(
@@ -162,7 +222,7 @@ const EventsPage = () => {
                 </form>    
             </Modal>}
 
-            {selectedEvent &&  <Modal title={selectedEvent.title} canCancel canConfirm onCancel={modalCancel} onConfirm={bookEvent} confirmText="Book">
+            {selectedEvent &&  <Modal title={selectedEvent.title} canCancel canConfirm onCancel={modalCancel} onConfirm={bookEvent} confirmText={token ? 'Book' : 'Confirm'}>
                   <h1>{selectedEvent.title}</h1>
                   <h2>${selectedEvent.price} - {new Date(selectedEvent.date).toLocaleDateString()}</h2>
                   <p>{selectedEvent.description}</p>

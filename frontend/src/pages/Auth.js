@@ -15,26 +15,34 @@ const AuthPage = () => {
 
         let reqBody= {
             query: `
-                query {
-                    login(email:"${email}", password: "${password}") {
+                query Login($email: String!, $password: String!){
+                    login(email: $email, password: $password) {
                         userId
                         token
                         tokenExpiration
                     }
                 }
-            `
+            `,
+            variables: {
+                email,
+                password
+            }
         };
 
         if(!isLogin) {
             reqBody = {
                 query:`
-                    mutation {
-                        createUser(userInput: {email:"${email}", password: "${password}"}){
+                    mutation CreateUser($email: String!, $password: String!){
+                        createUser(userInput: {email: $email, password: $password}){
                             _id
                             email
                         }
                     }
-                `
+                `,
+                variables: {
+                    email,
+                    password
+                }
             };
         }
         
