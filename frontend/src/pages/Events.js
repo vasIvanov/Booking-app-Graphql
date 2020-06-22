@@ -5,7 +5,6 @@ import Backdrop from '../components/Backdrop/Backdrop';
 import AuthContext from '../context/auth-context';
 import EventList from '../components/Events/EventList';
 import Spinner from '../components/Spinner/Spinner';
-import { set } from 'mongoose';
 
 const EventsPage = () => {
     const [creating, setCreating] = useState(false);

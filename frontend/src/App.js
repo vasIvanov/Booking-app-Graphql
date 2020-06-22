@@ -8,7 +8,7 @@ import MainNavigation from './components/Navigation/MainNavigation';
 import AuthContext from './context/auth-context';
 
 function App() {
-  const [token, setToken] = useState(null);
+  const [token, setToken] = useState(localStorage.getItem('token') || null);
   const [userId, setUserId] = useState(null);
 
   const login = (token, userId, tokenExpiration) => {
@@ -17,13 +17,17 @@ function App() {
   }
 
   const logout = () => {
+    localStorage.removeItem('token');
     setToken(null);
     setUserId(null);
-    
   }
-
   
-
+  window.onbeforeunload = function () {
+    if(token) {
+      localStorage.setItem('token', token);
+    }
+  }
+  
   return (
     <div className="App">
       <BrowserRouter>

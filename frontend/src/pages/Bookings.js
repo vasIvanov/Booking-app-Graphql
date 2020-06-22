@@ -2,10 +2,13 @@ import React, {useState, useEffect, useContext} from 'react';
 import AuthContext from '../context/auth-context';
 import Spinner from '../components/Spinner/Spinner';
 import BookingList from '../components/Bookings/BookingList';
+import BookingsChart from '../components/Bookings/BookingsChart';
+import BookingsControl from '../components/Bookings/BookingsControls';
 
 const BookingsPage = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [bookings, setBookings] = useState('');
+    const [output, setOutput] = useState('list');
     const {token, userId} = useContext(AuthContext);
     
     useEffect(() => {
@@ -24,6 +27,7 @@ const BookingsPage = () => {
                             _id
                             title
                             date
+                            price
                         }
                     }
                 }
@@ -59,12 +63,28 @@ const BookingsPage = () => {
         });
 
     }
+    const changeOutputHandler = (output) => {
+        if(output === 'list') {
+            setOutput('list')
+        } else {
+            setOutput('chart')
+        }
+    }
+    let content = <Spinner />;
+    if(!isLoading) {
+        content = (
+            <React.Fragment>
+                <BookingsControl  changeOutputHandler={changeOutputHandler} actioveOutput={output}/>
+                
+                <div>
+                    {output === 'list' ? <BookingList setBookings={setBookings} bookings={bookings}/> : <BookingsChart bookings={bookings}/>}
+                </div>
+            </React.Fragment>
+        )
+    }
     return(
         <React.Fragment>
-            {isLoading  ? <Spinner/> : (
-                <BookingList setBookings={setBookings} bookings={bookings} />
-            )}
-            
+          {content}
         </React.Fragment>
     )
 }
