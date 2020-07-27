@@ -13,8 +13,35 @@ const BookingsPage = () => {
     
     useEffect(() => {
         fetchBookings();
+        test()
     }, [])
+//--------------------------------------------------------------
+    const test = () => {
+        fetch('https://api.github.com/users/vasivanov/repos', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        }).then(res => {
+            
+            if(res.status !== 200 && res.status !== 201) {
+                throw new Error('Failed');
+            }
+            return res.json();
+        })
+        .then(resData => {
+            resData.map(e => {
+                console.log(e.name);
+                console.log(e.html_url);
+            })
 
+            
+        })
+        .catch(err => {
+            console.log(err);
+        });
+    }
+//------------------------------------------------
     const fetchBookings = () => {
         setIsLoading(true);
         const reqBody = {
